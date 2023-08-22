@@ -61,60 +61,55 @@ resource "azurerm_web_application_firewall_policy" "waf" {
     }
   }
 
-  dynamic "managed_rules" {
-    for_each = var.managed_rules != null ? [var.managed_rules] : []
+  managed_rules {
+    dynamic "exclusion" {
+      for_each = { for k in var.managed_rules.exclusions : k.name => k if k != null }
 
-    content {
+      content {
+        match_variable          = exclusion.value["match_variable"]
+        selector_match_operator = exclusion.value["operator"]
+        selector                = exclusion.value["selector"]
 
-      dynamic "exclusion" {
-        for_each = { for k in managed_rules.value["exclusions"] : k.name => k if k != null }
+        dynamic "excluded_rule_set" {
+          for_each = { for k in exclusion.value["excluded_rule_sets"] : k.name => k if k != null }
 
-        content {
-          match_variable          = exclusion.value["match_variable"]
-          selector_match_operator = exclusion.value["operator"]
-          selector                = exclusion.value["selector"]
+          content {
+            type    = excluded_rule_set.value["type"]
+            version = excluded_rule_set.value["version"]
 
-          dynamic "excluded_rule_set" {
-            for_each = { for k in exclusion.value["excluded_rule_sets"] : k.name => k if k != null }
+            dynamic "rule_group" {
+              for_each = { for k in excluded_rule_set.value["rule_groups"] : k.name => k if k != null }
 
-            content {
-              type    = excluded_rule_set.value["type"]
-              version = excluded_rule_set.value["version"]
-
-              dynamic "rule_group" {
-                for_each = { for k in excluded_rule_set.value["rule_groups"] : k.name => k if k != null }
-
-                content {
-                  rule_group_name = rule_group.value["rule_group_name"]
-                  excluded_rules  = rule_group.value["excluded_rules"]
-                }
+              content {
+                rule_group_name = rule_group.value["rule_group_name"]
+                excluded_rules  = rule_group.value["excluded_rules"]
               }
             }
           }
         }
       }
+    }
 
-      dynamic "managed_rule_set" {
-        for_each = { for k in managed_rules.value["managed_rule_sets"] : k.name => k if k != null }
+    dynamic "managed_rule_set" {
+      for_each = { for k in var.managed_rules.managed_rule_sets : k.name => k if k != null }
 
-        content {
-          type    = managed_rule_set.value["type"]
-          version = managed_rule_set.value["version"]
+      content {
+        type    = managed_rule_set.value["type"]
+        version = managed_rule_set.value["version"]
 
-          dynamic "rule_group_override" {
-            for_each = { for k in managed_rule_set.value["rule_group_overrides"] : k.name => k if k != null }
+        dynamic "rule_group_override" {
+          for_each = { for k in managed_rule_set.value["rule_group_overrides"] : k.name => k if k != null }
 
-            content {
-              rule_group_name = rule_group_override.value["rule_group_name"]
+          content {
+            rule_group_name = rule_group_override.value["rule_group_name"]
 
-              dynamic "rule" {
-                for_each = { for k in rule_group_override.value["rules"] : k.name => k if k != null }
+            dynamic "rule" {
+              for_each = { for k in rule_group_override.value["rules"] : k.name => k if k != null }
 
-                content {
-                  id      = rule.value["id"]
-                  enabled = rule.value["enabled"]
-                  action  = rule.value["action"]
-                }
+              content {
+                id      = rule.value["id"]
+                enabled = rule.value["enabled"]
+                action  = rule.value["action"]
               }
             }
           }
