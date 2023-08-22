@@ -84,12 +84,8 @@ variable "custom_rules" {
 }
 
 variable "managed_rules" {
-  type = list(object(
+  type = object(
     {
-      name    = string
-      type    = string
-      version = string
-      action  = string
       exclusions = optional(list(object(
         {
           name           = string
@@ -122,8 +118,7 @@ variable "managed_rules" {
           })))
         })))
       })))
-  }))
-  default     = []
+  })
   description = " WAF Policy managed rules"
 }
 
