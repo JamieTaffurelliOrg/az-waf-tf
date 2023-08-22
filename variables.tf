@@ -102,7 +102,7 @@ variable "managed_rules" {
               excluded_rules  = list(string)
             })))
           }))
-      })))
+      })), [])
       managed_rule_sets = optional(list(object({
         name    = string
         type    = string
@@ -116,7 +116,7 @@ variable "managed_rules" {
             enabled = optional(bool, true)
             action  = string
           })))
-        })))
+        })), [])
       })))
   })
   description = " WAF Policy managed rules"

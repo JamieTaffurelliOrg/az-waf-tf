@@ -63,7 +63,7 @@ resource "azurerm_web_application_firewall_policy" "waf" {
 
   managed_rules {
     dynamic "exclusion" {
-      for_each = var.managed_rules.exclusions == null ? {} : { for k in var.managed_rules.exclusions : k.name => k if k != null }
+      for_each = { for k in var.managed_rules.exclusions : k.name => k if k != null }
 
       content {
         match_variable          = exclusion.value["match_variable"]
